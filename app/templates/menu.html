@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="fw-bold mb-0">Menú Digital del Restaurante</h3>
+</div>
+
+{% if current_user.rol == 'administrador' %}
+<div class="row g-3 mb-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-secondary text-white">Nueva Categoría</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('menu.create_category') }}">
+                    {{ cat_form.hidden_tag() }}
+                    <div class="mb-2">{{ cat_form.nombre.label(class="form-label") }}{{ cat_form.nombre(class="form-control") }}</div>
+                    <div class="mb-2">{{ cat_form.descripcion.label(class="form-label") }}{{ cat_form.descripcion(class="form-control") }}</div>
+                    <button type="submit" class="btn btn-secondary btn-sm w-100">Guardar Categoría</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">Registrar Plato en el Menú</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('menu.create_dish') }}">
+                    {{ dish_form.hidden_tag() }}
+                    <div class="row g-2">
+                        <div class="col-md-6">{{ dish_form.nombre.label(class="form-label") }}{{ dish_form.nombre(class="form-control") }}</div>
+                        <div class="col-md-3">{{ dish_form.precio.label(class="form-label") }}{{ dish_form.precio(class="form-control") }}</div>
+                        <div class="col-md-3">{{ dish_form.category_id.label(class="form-label") }}{{ dish_form.category_id(class="form-select") }}</div>
+                        <div class="col-md-9">{{ dish_form.descripcion.label(class="form-label") }}{{ dish_form.descripcion(class="form-control") }}</div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check mb-2">{{ dish_form.disponible(class="form-check-input") }} {{ dish_form.disponible.label(class="form-check-label") }}</div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">Agregar Plato</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-dark text-white">Catálogo de Platos Activos</div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr><th>Plato</th><th>Categoría</th><th>Descripción</th><th>Precio</th><th>Disponibilidad</th>{% if current_user.rol == 'administrador' %}<th>Acciones</th>{% endif %}</tr>
+            </thead>
+            <tbody>
+                {% for d in dishes %}
+                <tr>
+                    <td class="fw-semibold">{{ d.nombre }}</td>
+                    <td><span class="badge bg-info text-dark">{{ d.category.nombre }}</span></td>
+                    <td class="small text-muted">{{ d.descripcion }}</td>
