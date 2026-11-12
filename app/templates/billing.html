@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-success text-white shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-uppercase small">Ingresos en Fecha ({{ fecha_filtro }})</h6>
+                <h2 class="fw-bold mb-0">${{ "{:,.0f}".format(ingresos_fecha) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-primary text-white shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-uppercase small">Pedidos Finalizados ({{ fecha_filtro }})</h6>
+                <h2 class="fw-bold mb-0">{{ cantidad_pedidos }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <form method="GET" class="d-flex gap-2 align-items-end">
+                    <div class="w-100">
+                        <label class="form-label small fw-bold mb-1">Consultar Reporte por Fecha</label>
+                        <input type="date" name="fecha" value="{{ fecha_filtro }}" class="form-control form-control-sm">
+                    </div>
+                    <button class="btn btn-dark btn-sm">Filtrar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-warning text-dark fw-bold">Ejecutar Cierre de Caja Diario</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('billing.close_cash') }}">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-2">{{ form.fecha.label(class="form-label") }}{{ form.fecha(class="form-control", type="date") }}</div>
+                    <div class="mb-3">{{ form.observaciones.label(class="form-label") }}{{ form.observaciones(class="form-control", placeholder="Turno normal sin novedades") }}</div>
+                    <button type="submit" class="btn btn-warning w-100 fw-semibold">Cerrar Caja de la Fecha</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">Historial de Cierres de Caja</div>
+            <div class="card-body p-0">
+                <table class="table table-sm table-striped mb-0">
+                    <thead><tr><th>Fecha</th><th>Pedidos</th><th>Total</th><th>Responsable</th></tr></thead>
+                    <tbody>
+                        {% for c in cierres %}
+                        <tr>
+                            <td>{{ c.fecha }}</td>
+                            <td>{{ c.total_pedidos }}</td>
+                            <td class="fw-bold">${{ "{:,.0f}".format(c.total_ingresos) }}</td>
+                            <td class="small">{{ c.cerrado_por.username }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center py-2 text-muted">Sin cierres registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">Detalle de Ventas Registradas ({{ fecha_filtro }})</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead><tr><th>Venta #</th><th>Pedido #</th><th>Cliente / Mesa</th><th>Monto</th><th>Estado Cierre</th></tr></thead>
+                    <tbody>
+                        {% for v in ventas %}
+                        <tr>
+                            <td>#{{ v.id }}</td>
+                            <td>Pedido #{{ v.order_id }}</td>
+                            <td>{{ v.order.cliente_nombre }} (Mesa {{ v.order.mesa }})</td>
+                            <td class="fw-bold">${{ "{:,.0f}".format(v.monto) }}</td>
+                            <td>
+                                {% if v.closure_id %}<span class="badge bg-secondary">Cerrada (Cierre #{{ v.closure_id }})</span>
+                                {% else %}<span class="badge bg-success">Abierta</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center py-3 text-muted">No hay ventas para la fecha seleccionada.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

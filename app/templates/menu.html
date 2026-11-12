@@ -55,3 +55,24 @@
                     <td class="fw-semibold">{{ d.nombre }}</td>
                     <td><span class="badge bg-info text-dark">{{ d.category.nombre }}</span></td>
                     <td class="small text-muted">{{ d.descripcion }}</td>
+                    <td class="fw-bold">${{ "{:,.0f}".format(d.precio) }}</td>
+                    <td>
+                        {% if d.disponible %}<span class="badge bg-success">Disponible</span>
+                        {% else %}<span class="badge bg-secondary">Agotado</span>{% endif %}
+                    </td>
+                    {% if current_user.rol == 'administrador' %}
+                    <td class="d-flex gap-1">
+                        <a href="{{ url_for('menu.edit_dish', dish_id=d.id) }}" class="btn btn-sm btn-outline-primary">Editar</a>
+                        <form method="POST" action="{{ url_for('menu.deactivate_dish', dish_id=d.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Desactivar</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
