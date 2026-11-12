@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white text-center py-3">
+                <h5 class="mb-0">Iniciar Sesión — SIGR</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3">
+                        {{ form.username.label(class="form-label fw-semibold") }}
+                        {{ form.username(class="form-control", placeholder="Ej: admin, mesero o cliente") }}
+                    </div>
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label fw-semibold") }}
+                        {{ form.password(class="form-control", placeholder="Contraseña") }}
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Ingresar al Sistema</button>
+                </form>
+                <hr>
+                <div class="small text-muted">
+                    <strong>Credenciales de prueba (Línea Base):</strong><br>
+                    • Admin: <code>admin</code> / <code>admin123</code><br>
+                    • Mesero: <code>mesero</code> / <code>mesero123</code><br>
+                    • Cliente: <code>cliente</code> / <code>cliente123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

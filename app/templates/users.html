@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">Registrar Nuevo Usuario</div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-2">{{ form.nombre.label(class="form-label") }}{{ form.nombre(class="form-control") }}</div>
+                    <div class="mb-2">{{ form.username.label(class="form-label") }}{{ form.username(class="form-control") }}</div>
+                    <div class="mb-2">{{ form.password.label(class="form-label") }}{{ form.password(class="form-control") }}</div>
+                    <div class="mb-3">{{ form.rol.label(class="form-label") }}{{ form.rol(class="form-select") }}</div>
+                    <button type="submit" class="btn btn-primary w-100">Crear Usuario</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">Usuarios del Sistema</div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr><th>ID</th><th>Nombre</th><th>Usuario</th><th>Rol</th><th>Estado</th><th>Acción</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td>{{ u.nombre }}</td>
+                            <td><code>{{ u.username }}</code></td>
+                            <td><span class="badge bg-secondary">{{ u.rol }}</span></td>
+                            <td>
+                                {% if u.activo %}<span class="badge bg-success">Activo</span>
+                                {% else %}<span class="badge bg-danger">Inactivo</span>{% endif %}
+                            </td>
+                            <td>
+                                {% if u.username != 'admin' %}
+                                <form method="POST" action="{{ url_for('auth.toggle_user', user_id=u.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button class="btn btn-sm btn-outline-dark">Cambiar Estado</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
