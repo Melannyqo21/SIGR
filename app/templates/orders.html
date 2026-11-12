@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-success text-white fw-semibold">Registrar Nuevo Pedido</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('orders.create_order') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Nombre del Cliente</label>
+                            <input type="text" name="cliente_nombre" class="form-control" value="{{ current_user.nombre if current_user.rol == 'cliente' else '' }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Mesa #</label>
+                            <input type="number" name="mesa" class="form-control" min="1" max="50" value="1" required>
+                        </div>
+                    </div>
+                    <h6 class="fw-bold border-bottom pb-1">Seleccionar Productos Disponibles</h6>
+                    <div class="mb-3" style="max-height: 280px; overflow-y: auto;">
+                        {% for d in dishes %}
+                        <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                            <div>
+                                <input type="hidden" name="dish_id" value="{{ d.id }}">
+                                <div class="fw-semibold small">{{ d.nombre }}</div>
+                                <div class="text-muted small">${{ "{:,.0f}".format(d.precio) }}</div>
+                            </div>
+                            <div style="width: 85px;">
+                                <input type="number" name="cantidad" class="form-control form-control-sm" min="0" value="0">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Confirmar y Calcular Pedido</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">Historial y Seguimiento de Pedidos</div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr><th>#</th><th>Mesa / Cliente</th><th>Detalle y Subtotales</th><th>Total</th><th>Estado</th>{% if current_user.rol in ['administrador', 'mesero'] %}<th>Actualizar</th>{% endif %}</tr>
+                    </thead>
+                    <tbody>
+                        {% for o in orders %}
+                        <tr>
+                            <td class="fw-bold">#{{ o.id }}</td>
+                            <td>
+                                <strong>Mesa {{ o.mesa }}</strong><br>
+                                <span class="small text-muted">{{ o.cliente_nombre }}</span>
+                            </td>
+                            <td class="small">
+                                {% for item in o.items %}
+                                    • {{ item.cantidad }}x {{ item.dish.nombre }} (${{ "{:,.0f}".format(item.subtotal) }})<br>
+                                {% endfor %}
+                            </td>
+                            <td class="fw-bold">${{ "{:,.0f}".format(o.total) }}</td>
+                            <td><span class="badge bg-primary">{{ o.estado|upper }}</span></td>
+                            {% if current_user.rol in ['administrador', 'mesero'] %}
+                            <td>
+                                <form method="POST" action="{{ url_for('orders.change_status', order_id=o.id) }}" class="d-flex gap-1">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <select name="estado" class="form-select form-select-sm">
+                                        {% for est in ['pendiente', 'en preparación', 'listo', 'entregado'] %}
+                                        <option value="{{ est }}" {% if o.estado == est %}selected{% endif %}>{{ est }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-sm btn-dark">OK</button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center py-3 text-muted">No hay pedidos registrados.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

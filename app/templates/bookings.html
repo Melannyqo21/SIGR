@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">Registrar Reserva</div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="mb-2">{{ form.cliente_nombre.label(class="form-label") }}{{ form.cliente_nombre(class="form-control") }}</div>
+                    <div class="mb-2">{{ form.contacto.label(class="form-label") }}{{ form.contacto(class="form-control") }}</div>
+                    <div class="mb-2">{{ form.fecha.label(class="form-label") }}{{ form.fecha(class="form-control", type="date") }}</div>
+                    <div class="mb-2">{{ form.hora.label(class="form-label") }}{{ form.hora(class="form-control", placeholder="19:30") }}</div>
+                    <div class="mb-3">{{ form.personas.label(class="form-label") }}{{ form.personas(class="form-control") }}</div>
+                    <button type="submit" class="btn btn-primary w-100">Guardar Reserva</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-dark text-white">Listado de Reservas</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr><th>#</th><th>Cliente</th><th>Contacto</th><th>Fecha y Hora</th><th>Personas</th><th>Estado</th>{% if current_user.rol in ['administrador', 'mesero'] %}<th>Gestión</th>{% endif %}</tr>
+                    </thead>
+                    <tbody>
+                        {% for b in bookings %}
+                        <tr>
+                            <td>#{{ b.id }}</td>
+                            <td class="fw-semibold">{{ b.cliente_nombre }}</td>
+                            <td>{{ b.contacto }}</td>
+                            <td>{{ b.fecha }} - {{ b.hora }}</td>
+                            <td>{{ b.personas }}</td>
+                            <td><span class="badge bg-info text-dark">{{ b.estado|upper }}</span></td>
+                            {% if current_user.rol in ['administrador', 'mesero'] %}
+                            <td>
+                                <form method="POST" action="{{ url_for('bookings.update_booking', booking_id=b.id) }}" class="d-flex gap-1">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <select name="estado" class="form-select form-select-sm">
+                                        {% for est in ['pendiente', 'confirmada', 'cancelada', 'atendida'] %}
+                                        <option value="{{ est }}" {% if b.estado == est %}selected{% endif %}>{{ est }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <button class="btn btn-sm btn-dark">OK</button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center py-3 text-muted">No hay reservas registradas.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
