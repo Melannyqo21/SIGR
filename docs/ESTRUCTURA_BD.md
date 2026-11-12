@@ -1,10 +1,12 @@
-# Historial de Cambios (CHANGELOG)
+# Documentación de la Estructura de Base de Datos (`sigr.db` - SQLite)
 
-## [v1.0.0] - 2026-11-11 — Establecimiento de Línea Base
-### Añadido
-- **Módulo 1 (Autenticación y Usuarios):** Inicio/cierre de sesión, hash de contraseñas con Werkzeug y control de acceso por roles (`administrador`, `mesero`, `cliente`).
-- **Módulo 2 (Menú Digital):** Creación de categorías, registro, consulta, edición y desactivación lógica de platos.
-- **Módulo 3 (Pedidos):** Toma de pedidos por mesa, cálculo automático de subtotales/totales y máquina de estados (`pendiente`, `en preparación`, `listo`, `entregado`).
-- **Módulo 4 (Reservas):** Registro y actualización de reservas con estados (`pendiente`, `confirmada`, `cancelada`, `atendida`).
-- **Módulo 5 (Caja y Reportes):** Generación automática de venta única al entregar pedidos, cierre de caja diario y reporte de ingresos por fecha.
-- **Pruebas:** Suite de pruebas de integración con `pytest`.
+El modelo relacional gestionado mediante SQLAlchemy está compuesto por 8 tablas:
+
+1. **`users`**: Almacena los usuarios del sistema (`id`, `nombre`, `username`, `password_hash`, `rol`, `activo`).
+2. **`categories`**: Categorías del menú digital (`id`, `nombre`, `descripcion`).
+3. **`dishes`**: Platos y productos (`id`, `nombre`, `descripcion`, `precio`, `disponible`, `activo`, `category_id`).
+4. **`orders`**: Encabezado de pedidos (`id`, `cliente_nombre`, `mesa`, `estado`, `total`, `fecha_creacion`, `cliente_id`, `mesero_id`).
+5. **`order_items`**: Detalle de platos y subtotales por pedido (`id`, `order_id`, `dish_id`, `cantidad`, `precio_unitario`, `subtotal`).
+6. **`bookings`**: Registro de reservas por fecha y hora (`id`, `cliente_nombre`, `contacto`, `fecha`, `hora`, `personas`, `estado`, `user_id`).
+7. **`cash_closures`**: Registro de cierres de caja diarios (`id`, `fecha`, `total_pedidos`, `total_ingresos`, `observaciones`, `cerrado_por_id`, `fecha_cierre`).
+8. **`sales`**: Ventas generadas automáticamente al entregar un pedido (`id`, `order_id` [Unique], `monto`, `fecha`, `fecha_hora`, `closure_id`).
