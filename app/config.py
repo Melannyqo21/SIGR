@@ -5,9 +5,13 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "clave-secreta-sigr-linea-base-v1")
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, '..', 'sigr.db')}"
-    )
+
+    if os.environ.get("VERCEL"):
+        default_db = "sqlite:////tmp/sigr.db"
+    else:
+        default_db = f"sqlite:///{os.path.join(BASE_DIR, '..', 'sigr.db')}"
+
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", default_db)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
 
