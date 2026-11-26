@@ -48,7 +48,8 @@ def close_cash():
                 observaciones=form.observaciones.data
             )
             flash(
-                f"Cierre de caja realizado para {cierre.fecha}: {cierre.total_pedidos} pedidos por ${cierre.total_ingresos:,.0f}.",
+                f"Cierre de caja realizado para {cierre.fecha}: {cierre.total_pedidos} pedidos "
+                f"por ${cierre.total_ingresos:,.0f}.",
                 "success"
             )
         except ValueError as e:

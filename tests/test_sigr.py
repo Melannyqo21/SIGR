@@ -2,8 +2,7 @@ import pytest
 from datetime import date
 from app import create_app
 from app.config import TestConfig
-from app.extensions import db
-from app.models import Dish, Order, Sale, Booking
+from app.models import Dish, Sale, Booking
 from app.services import create_order_with_items, update_order_status, perform_daily_closure
 
 @pytest.fixture

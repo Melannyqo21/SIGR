@@ -1,0 +1,183 @@
+name: SIGR CI/CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  # ==========================================
+  # ETAPA 1: INTEGRACION CONTINUA (CI)
+  # ==========================================
+  build-and-test:
+    name: Integracion continua (CI)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: requirements.txt
+
+      - name: 3. Instalar dependencias y herramientas
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 bandit
+
+      # ------------------------------------------
+      # CALIDAD DEL CODIGO
+      # ------------------------------------------
+      - name: 4. Analisis de calidad con Flake8
+        run: |
+          flake8 app tests \
+            --max-line-length=120 \
+            --extend-ignore=E203,W503 \
+            --statistics
+
+      # ------------------------------------------
+      # SEGURIDAD DEL CODIGO
+      # ------------------------------------------
+      - name: 5. Analisis estatico de seguridad con Bandit
+        run: |
+          bandit -r app -ll
+
+      # ------------------------------------------
+      # PRUEBAS AUTOMATIZADAS
+      # ------------------------------------------
+      - name: 6. Ejecutar pruebas con Pytest
+        env:
+          SECRET_KEY: "ci-sigr-test-secret-key"
+        run: |
+          python -m pytest -v \
+            --junitxml=resultado_pruebas.xml
+
+      - name: 7. Guardar reporte de pruebas
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-pruebas-sigr
+          path: resultado_pruebas.xml
+          if-no-files-found: ignore
+
+  # ==========================================
+  # ETAPA 2: CONSTRUCCION Y SEGURIDAD DOCKER
+  # ==========================================
+  build-and-scan:
+    name: Construccion y analisis de imagen Docker
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 8. Descargar codigo fuente
+        uses: actions/checkout@v4
+
+      # ------------------------------------------
+      # CONSTRUCCION DE IMAGEN
+      # ------------------------------------------
+      - name: 9. Construir imagen Docker de SIGR
+        run: |
+          docker build -t sigr:${{ github.sha }} .
+
+      # ------------------------------------------
+      # ANALISIS DE VULNERABILIDADES
+      # ------------------------------------------
+      - name: 10. Analizar imagen con Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: sigr:${{ github.sha }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+
+      # ------------------------------------------
+      # EMPAQUETADO DEL ARTEFACTO
+      # ------------------------------------------
+      - name: 11. Generar artefacto Docker
+        run: |
+          mkdir -p dist
+          docker save sigr:${{ github.sha }} \
+            -o dist/sigr-image.tar
+          ls -lh dist/sigr-image.tar
+
+      - name: 12. Publicar artefacto de entrega
+        uses: actions/upload-artifact@v4
+        with:
+          name: sigr-docker-image
+          path: dist/sigr-image.tar
+          retention-days: 7
+
+  # ==========================================
+  # ETAPA 3: ENTREGA CONTINUA (CD)
+  # ==========================================
+  staging:
+    name: Despliegue simulado en Staging
+    needs: build-and-scan
+    runs-on: ubuntu-latest
+
+    # Solo se ejecuta al integrar cambios en main.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 13. Descargar artefacto Docker
+        uses: actions/download-artifact@v4
+        with:
+          name: sigr-docker-image
+          path: dist
+
+      # ------------------------------------------
+      # CARGA DE IMAGEN
+      # ------------------------------------------
+      - name: 14. Cargar imagen Docker
+        run: |
+          docker load -i dist/sigr-image.tar
+
+      # ------------------------------------------
+      # DESPLIEGUE SIMULADO
+      # ------------------------------------------
+      - name: 15. Ejecutar contenedor en Staging
+        run: |
+          docker run -d \
+            --name sigr-staging \
+            -p 5000:5000 \
+            -e SECRET_KEY="ci-sigr-staging-test-key" \
+            -e DATABASE_URL="sqlite:////app/instance/sigr.db" \
+            sigr:${{ github.sha }}
+
+      # ------------------------------------------
+      # VALIDACION DE DISPONIBILIDAD
+      # ------------------------------------------
+      - name: 16. Verificar funcionamiento de SIGR
+        run: |
+          for attempt in $(seq 1 20); do
+            status=$(curl -sS -o /dev/null \
+              -w "%{http_code}" http://localhost:5000/ || true)
+
+            if [[ "$status" =~ ^[23][0-9][0-9]$ ]]; then
+              echo "SIGR responde correctamente. HTTP: $status"
+              exit 0
+            fi
+
+            echo "Esperando inicio de SIGR..."
+            sleep 2
+          done
+
+          echo "La aplicacion no respondio correctamente."
+          docker logs sigr-staging
+          exit 1
+
+      - name: 17. Limpiar entorno de Staging
+        if: always()
+        run: |
+          docker rm -f sigr-staging || true

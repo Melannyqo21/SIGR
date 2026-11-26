@@ -1,6 +1,6 @@
 from datetime import date
 from app.extensions import db
-from app.models import User, Category, Dish, Order, OrderItem, Booking, Sale, CashClosure
+from app.models import User, Dish, Order, OrderItem, Sale, CashClosure
 
 def create_user(nombre, username, password, rol):
     if User.query.filter_by(username=username).first():

@@ -1,7 +1,9 @@
 from flask import Flask, redirect, url_for
+from sqlalchemy.exc import IntegrityError
 from app.config import Config
 from app.extensions import db, login_manager, csrf
 from app.models import User, Category, Dish
+
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -33,30 +35,74 @@ def create_app(config_class=Config):
 
     return app
 
+
 def seed_initial_data():
-    """Crea usuarios y menú base si la base de datos está vacía."""
-    if User.query.count() == 0:
-        admin = User(nombre="Administrador General", username="admin", rol="administrador")
-        admin.set_password("admin123")
-        mesero = User(nombre="Carlos Mesero", username="mesero", rol="mesero")
-        mesero.set_password("mesero123")
-        cliente = User(nombre="Ana Cliente", username="cliente", rol="cliente")
-        cliente.set_password("cliente123")
-        db.session.add_all([admin, mesero, cliente])
+    """Crea usuarios y menú base de forma idempotente."""
+    try:
+        usuarios = [
+            ("Administrador General", "admin", "admin123", "administrador"),
+            ("Carlos Mesero", "mesero", "mesero123", "mesero"),
+            ("Ana Cliente", "cliente", "cliente123", "cliente"),
+        ]
+        for nombre, username, password, rol in usuarios:
+            if not User.query.filter_by(username=username).first():
+                user = User(nombre=nombre, username=username, rol=rol, activo=True)
+                user.set_password(password)
+                db.session.add(user)
         db.session.commit()
 
-    if Category.query.count() == 0:
-        cat_fuertes = Category(nombre="Platos Fuertes", descripcion="Especialidades de la casa")
-        cat_bebidas = Category(nombre="Bebidas", descripcion="Jugos naturales y refrescos")
-        cat_postres = Category(nombre="Postres", descripcion="Dulces tradicionales")
-        db.session.add_all([cat_fuertes, cat_bebidas, cat_postres])
-        db.session.flush()
+        categorias = [
+            ("Platos Fuertes", "Especialidades de la casa"),
+            ("Bebidas", "Jugos naturales y refrescos"),
+            ("Postres", "Dulces tradicionales"),
+        ]
+        for nombre, descripcion in categorias:
+            if not Category.query.filter_by(nombre=nombre).first():
+                db.session.add(Category(nombre=nombre, descripcion=descripcion))
+        db.session.commit()
+
+        cat_fuertes = Category.query.filter_by(nombre="Platos Fuertes").first()
+        cat_bebidas = Category.query.filter_by(nombre="Bebidas").first()
+        cat_postres = Category.query.filter_by(nombre="Postres").first()
 
         platos = [
-            Dish(nombre="Bandeja Paisa", descripcion="Plato típico con chicharrón, carne, frijol y aguacate", precio=34000, disponible=True, category_id=cat_fuertes.id),
-            Dish(nombre="Lomo al Trapo", descripcion="Lomo de res asado con guarnición de papas rústicas", precio=42000, disponible=True, category_id=cat_fuertes.id),
-            Dish(nombre="Limonada de Coco", descripcion="Limonada frappé con crema de coco natural", precio=11000, disponible=True, category_id=cat_bebidas.id),
-            Dish(nombre="Cheesecake de Maracuyá", descripcion="Porción de torta de queso con reducción de maracuyá", precio=14000, disponible=True, category_id=cat_postres.id),
+            (
+                "Bandeja Paisa",
+                "Plato típico con chicharrón, carne, frijol y aguacate",
+                34000,
+                cat_fuertes,
+            ),
+            (
+                "Lomo al Trapo",
+                "Lomo de res asado con guarnición de papas rústicas",
+                42000,
+                cat_fuertes,
+            ),
+            (
+                "Limonada de Coco",
+                "Limonada frappé con crema de coco natural",
+                11000,
+                cat_bebidas,
+            ),
+            (
+                "Cheesecake de Maracuyá",
+                "Porción de torta de queso con reducción de maracuyá",
+                14000,
+                cat_postres,
+            ),
         ]
-        db.session.add_all(platos)
+        for nombre, descripcion, precio, categoria in platos:
+            if categoria and not Dish.query.filter_by(nombre=nombre).first():
+                db.session.add(
+                    Dish(
+                        nombre=nombre,
+                        descripcion=descripcion,
+                        precio=precio,
+                        disponible=True,
+                        activo=True,
+                        category_id=categoria.id,
+                    )
+                )
         db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
