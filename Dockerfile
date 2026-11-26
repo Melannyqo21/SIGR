@@ -15,7 +15,10 @@ RUN apt-get update \
 # Instalar dependencias
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir --upgrade "setuptools>=78.1.1"
+
 
 # Copiar codigo de la aplicacion
 COPY app ./app
