@@ -92,14 +92,15 @@ jobs:
       # ANALISIS DE VULNERABILIDADES
       # ------------------------------------------
       - name: 10. Analizar imagen con Trivy
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: sigr:${{ github.sha }}
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+          trivy image \
+            --format table \
+            --exit-code 1 \
+            --ignore-unfixed \
+            --vuln-type os,library \
+            --severity CRITICAL,HIGH \
+            sigr:${{ github.sha }}
 
       # ------------------------------------------
       # EMPAQUETADO DEL ARTEFACTO
