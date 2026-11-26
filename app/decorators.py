@@ -2,6 +2,7 @@ from functools import wraps
 from flask import abort, flash, redirect, url_for
 from flask_login import current_user
 
+
 def role_required(*roles):
     """Restringe el acceso a rutas según el rol del usuario autenticado."""
     def decorator(f):

@@ -7,6 +7,7 @@ from app.decorators import role_required
 
 bookings_bp = Blueprint("bookings", __name__, url_prefix="/bookings")
 
+
 @bookings_bp.route("/", methods=["GET", "POST"])
 @login_required
 def list_bookings():
@@ -32,6 +33,7 @@ def list_bookings():
         bookings = Booking.query.order_by(Booking.fecha.desc(), Booking.hora.asc()).all()
 
     return render_template("bookings.html", bookings=bookings, form=form)
+
 
 @bookings_bp.route("/<int:booking_id>/status", methods=["POST"])
 @login_required

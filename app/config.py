@@ -2,6 +2,7 @@ import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "clave-secreta-sigr-linea-base-v1")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
@@ -9,6 +10,7 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
+
 
 class TestConfig(Config):
     TESTING = True

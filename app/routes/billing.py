@@ -8,6 +8,7 @@ from app.decorators import role_required
 
 billing_bp = Blueprint("billing", __name__, url_prefix="/billing")
 
+
 @billing_bp.route("/", methods=["GET"])
 @login_required
 @role_required("administrador")
@@ -34,6 +35,7 @@ def dashboard():
         cierres=cierres,
         form=form
     )
+
 
 @billing_bp.route("/close", methods=["POST"])
 @login_required

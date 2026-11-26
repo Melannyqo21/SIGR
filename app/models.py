@@ -3,9 +3,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from app.extensions import db, login_manager
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
+
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -22,12 +24,14 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+
 class Category(db.Model):
     __tablename__ = "categories"
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(80), unique=True, nullable=False)
     descripcion = db.Column(db.String(200))
     dishes = db.relationship("Dish", backref="category", lazy=True)
+
 
 class Dish(db.Model):
     __tablename__ = "dishes"
@@ -38,6 +42,7 @@ class Dish(db.Model):
     disponible = db.Column(db.Boolean, default=True)
     activo = db.Column(db.Boolean, default=True)  # Eliminación lógica
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False)
+
 
 class Order(db.Model):
     __tablename__ = "orders"
@@ -54,6 +59,7 @@ class Order(db.Model):
     sale = db.relationship("Sale", backref="order", uselist=False, lazy=True)
     mesero = db.relationship("User", foreign_keys=[mesero_id])
 
+
 class OrderItem(db.Model):
     __tablename__ = "order_items"
     id = db.Column(db.Integer, primary_key=True)
@@ -65,6 +71,7 @@ class OrderItem(db.Model):
 
     dish = db.relationship("Dish")
 
+
 class Booking(db.Model):
     __tablename__ = "bookings"
     id = db.Column(db.Integer, primary_key=True)
@@ -75,6 +82,7 @@ class Booking(db.Model):
     personas = db.Column(db.Integer, nullable=False)
     estado = db.Column(db.String(20), default="pendiente")  # pendiente, confirmada, cancelada, atendida
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+
 
 class CashClosure(db.Model):
     __tablename__ = "cash_closures"
@@ -88,6 +96,7 @@ class CashClosure(db.Model):
 
     cerrado_por = db.relationship("User")
     sales = db.relationship("Sale", backref="closure", lazy=True)
+
 
 class Sale(db.Model):
     __tablename__ = "sales"

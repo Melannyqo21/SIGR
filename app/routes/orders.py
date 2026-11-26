@@ -6,6 +6,7 @@ from app.decorators import role_required
 
 orders_bp = Blueprint("orders", __name__, url_prefix="/orders")
 
+
 @orders_bp.route("/", methods=["GET"])
 @login_required
 def list_orders():
@@ -15,6 +16,7 @@ def list_orders():
     else:
         orders = Order.query.order_by(Order.fecha_creacion.desc()).all()
     return render_template("orders.html", orders=orders, dishes=dishes)
+
 
 @orders_bp.route("/new", methods=["POST"])
 @login_required
@@ -49,6 +51,7 @@ def create_order():
         flash(str(e), "danger")
 
     return redirect(url_for("orders.list_orders"))
+
 
 @orders_bp.route("/<int:order_id>/status", methods=["POST"])
 @login_required

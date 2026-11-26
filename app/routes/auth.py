@@ -8,6 +8,7 @@ from app.extensions import db
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     form = LoginForm()
@@ -20,12 +21,14 @@ def login():
         flash("Usuario o contraseña incorrectos.", "danger")
     return render_template("login.html", form=form)
 
+
 @auth_bp.route("/logout")
 @login_required
 def logout():
     logout_user()
     flash("Has cerrado sesión correctamente.", "info")
     return redirect(url_for("auth.login"))
+
 
 @auth_bp.route("/users", methods=["GET", "POST"])
 @login_required
@@ -47,6 +50,7 @@ def manage_users():
 
     users = User.query.order_by(User.id.asc()).all()
     return render_template("users.html", users=users, form=form)
+
 
 @auth_bp.route("/users/<int:user_id>/toggle", methods=["POST"])
 @login_required

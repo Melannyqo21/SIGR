@@ -2,6 +2,7 @@ from datetime import date
 from app.extensions import db
 from app.models import User, Dish, Order, OrderItem, Sale, CashClosure
 
+
 def create_user(nombre, username, password, rol):
     if User.query.filter_by(username=username).first():
         raise ValueError("El nombre de usuario ya está registrado.")
@@ -10,6 +11,7 @@ def create_user(nombre, username, password, rol):
     db.session.add(user)
     db.session.commit()
     return user
+
 
 def create_order_with_items(cliente_nombre, mesa, items_data, mesero_id=None, cliente_id=None):
     """
@@ -56,6 +58,7 @@ def create_order_with_items(cliente_nombre, mesa, items_data, mesero_id=None, cl
     db.session.commit()
     return order
 
+
 def update_order_status(order_id, nuevo_estado):
     estados_validos = ["pendiente", "en preparación", "listo", "entregado"]
     if nuevo_estado not in estados_validos:
@@ -79,6 +82,7 @@ def update_order_status(order_id, nuevo_estado):
 
     db.session.commit()
     return order
+
 
 def perform_daily_closure(fecha_cierre, user_id, observaciones=""):
     """Agrupa las ventas sin cerrar de una fecha y genera el cierre de caja."""

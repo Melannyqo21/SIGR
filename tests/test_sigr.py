@@ -5,12 +5,14 @@ from app.config import TestConfig
 from app.models import Dish, Sale, Booking
 from app.services import create_order_with_items, update_order_status, perform_daily_closure
 
+
 @pytest.fixture
 def client():
     app = create_app(TestConfig)
     with app.test_client() as client:
         with app.app_context():
             yield client
+
 
 def test_auth_login_and_roles(client):
     """Verifica inicio de sesión correcto y protección de rutas por rol."""
@@ -19,6 +21,7 @@ def test_auth_login_and_roles(client):
 
     res_forbidden = client.get("/billing/")
     assert res_forbidden.status_code == 403
+
 
 def test_menu_crud_and_deactivation(client):
     """Verifica creación y desactivación lógica de platos por el administrador."""
@@ -36,6 +39,7 @@ def test_menu_crud_and_deactivation(client):
 
     client.post(f"/menu/dish/{plato.id}/deactivate", follow_redirects=True)
     assert plato.activo is False
+
 
 def test_order_creation_and_automatic_sale(client):
     """Verifica cálculo de subtotales/totales, entrega de pedido, venta única y cierre de caja."""
@@ -55,6 +59,7 @@ def test_order_creation_and_automatic_sale(client):
         cierre = perform_daily_closure(date.today(), user_id=1, observaciones="Cierre test")
         assert cierre.total_ingresos == order.total
         assert cierre.total_pedidos == 1
+
 
 def test_booking_lifecycle(client):
     """Verifica registro y actualización de estado de una reserva."""

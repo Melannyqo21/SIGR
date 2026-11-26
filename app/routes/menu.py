@@ -7,6 +7,7 @@ from app.extensions import db
 
 menu_bp = Blueprint("menu", __name__, url_prefix="/menu")
 
+
 @menu_bp.route("/", methods=["GET"])
 @login_required
 def list_menu():
@@ -23,6 +24,7 @@ def list_menu():
         dish_form=dish_form
     )
 
+
 @menu_bp.route("/category/new", methods=["POST"])
 @login_required
 @role_required("administrador")
@@ -37,6 +39,7 @@ def create_category():
             db.session.commit()
             flash("Categoría creada correctamente.", "success")
     return redirect(url_for("menu.list_menu"))
+
 
 @menu_bp.route("/dish/new", methods=["POST"])
 @login_required
@@ -60,6 +63,7 @@ def create_dish():
     else:
         flash("Error al validar los datos del plato.", "danger")
     return redirect(url_for("menu.list_menu"))
+
 
 @menu_bp.route("/dish/<int:dish_id>/edit", methods=["GET", "POST"])
 @login_required
@@ -85,6 +89,7 @@ def edit_dish(dish_id):
         return redirect(url_for("menu.list_menu"))
 
     return render_template("dish_edit.html", form=form, dish=dish)
+
 
 @menu_bp.route("/dish/<int:dish_id>/deactivate", methods=["POST"])
 @login_required
